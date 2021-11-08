@@ -42,54 +42,54 @@ class Button extends Component {
   static isAndroid = (Platform.OS === 'android')
 
   _renderChildren() {
-    let childElements = [];
-    React.Children.forEach(this.props.children, (item) => {
+    return React.Children.map(this.props.children, (item) => {
       if (typeof item === 'string' || typeof item === 'number') {
-        const element = (
+        return (
           <Text
-            style={[styles.textButton, this.props.textStyle]}
+            key={item}
             allowFontScaling={this.props.allowFontScaling}
-            key={item}>
+            style={[styles.textButton, this.props.textStyle]}
+          >
             {item}
           </Text>
         );
-        childElements.push(element);
-      } else if (React.isValidElement(item)) {
-        childElements.push(item);
       }
+
+      return React.isValidElement(item) ? item : null
     });
-    return (childElements);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    if (!isEqual(nextProps, this.props)) {
-      return true;
-    }
-    return false;
+    return !isEqual(nextProps, this.props);
   }
 
   _renderInnerText() {
     if (this.props.isLoading) {
       return (
         <ActivityIndicator
-          animating={true}
+          animating
           size='small'
           style={styles.spinner}
           color={this.props.activityIndicatorColor || 'black'}
         />
       );
     }
+
     return this._renderChildren();
   }
 
   render() {
     if (this.props.isDisabled === true || this.props.isLoading === true) {
       return (
-        <View style={[styles.button, this.props.style, (this.props.disabledStyle || styles.opacity)]}>
+        <View
+          testID={this.props.testID}
+          style={[styles.button, this.props.style, (this.props.disabledStyle || styles.opacity)]}
+        >
           {this._renderInnerText()}
         </View>
       );
     }
+
     // Extract Touchable props
     let touchableProps = {
       testID: this.props.testID,
@@ -103,10 +103,12 @@ class Button extends Component {
       delayPressIn: this.props.delayPressIn,
       delayPressOut: this.props.delayPressOut,
     };
+
     if (Button.isAndroid) {
       touchableProps = Object.assign(touchableProps, {
         background: this.props.background || TouchableNativeFeedback.SelectableBackground()
       });
+
       return (
         <TouchableNativeFeedback {...touchableProps}>
           <View style={[styles.button, this.props.style]}>
@@ -114,14 +116,16 @@ class Button extends Component {
           </View>
         </TouchableNativeFeedback>
       )
-    } else {
-      return (
-        <TouchableOpacity {...touchableProps}
-          style={[styles.button, this.props.style]}>
-          {this._renderInnerText()}
-        </TouchableOpacity>
-      );
     }
+
+    return (
+      <TouchableOpacity
+        {...touchableProps}
+        style={[styles.button, this.props.style]}
+      >
+        {this._renderInnerText()}
+      </TouchableOpacity>
+    );
   }
 }
 
